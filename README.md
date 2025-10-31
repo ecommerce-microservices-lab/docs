@@ -42,10 +42,10 @@ jobs:
 5. Análisis estático con SonarCloud
 6. Reporte de cobertura de código
 
-**Pantallazos requeridos**:
-- [ ] Captura de pantalla: Workflow ejecutándose en GitHub Actions (PR a develop)
-- [ ] Captura de pantalla: Resultados de pruebas unitarias/integración
-- [ ] Captura de pantalla: Reporte de SonarCloud con métricas de calidad
+**Pantallazos**:
+![Workflow PR a Develop](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/Workflow_PR_Develop.png)
+![Resultados Tests Unitarios](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/Resultado_tests_unitarios.png)
+![Métricas SonarCloud](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/Metricas_SonarCloud.png)
 
 ---
 
@@ -92,13 +92,14 @@ jobs:
 7. Ejecución de pruebas E2E con Newman (Postman)
 8. Ejecución de pruebas de rendimiento con K6
 
-**Pantallazos requeridos**:
-- [ ] Captura de pantalla: Workflow ejecutándose en GitHub Actions (PR a stage)
-- [ ] Captura de pantalla: Build y push de imagen Docker exitoso
-- [ ] Captura de pantalla: Deploy a Kubernetes exitoso
-- [ ] Captura de pantalla: Dashboard de Eureka con todos los servicios registrados
-- [ ] Captura de pantalla: Resultados de pruebas E2E (Newman)
-- [ ] Captura de pantalla: Resultados de pruebas de rendimiento (K6)
+**Pantallazos**:
+![Workflow PR a Stage](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/Workflow_PR_Stage.png)
+![Build y Push Stage](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/Build_y_push_Stage.png)
+![Imagen ACR](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/Imagen_ACR.png)
+![Deploy Kubernetes](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/Deploy_kubernetes.png)
+![Eureka Dashboard](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/Eureka_dashboard.png)
+![E2E Newman](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/E2E_newman.png)
+![K6 Performance](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/k6.png)
 
 ---
 
@@ -145,11 +146,11 @@ permissions:
   pull-requests: write
 ```
 
-**Pantallazos requeridos**:
-- [ ] Captura de pantalla: Workflow ejecutándose en GitHub Actions (push a main)
-- [ ] Captura de pantalla: Ejecución exitosa de semantic-release
-- [ ] Captura de pantalla: Release creado automáticamente en GitHub con Release Notes
-- [ ] Captura de pantalla: Tag de versión generado (ej: v1.0.0)
+**Pantallazos**:
+![Workflow PR a Main](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/Workflow_PR_main.png)
+![Ejecución Semantic Release](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/Ejecucion_semantic_release.png)
+![Release Notes](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/Release_note.png)
+![Tag](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/Tag.png)
 
 ---
 
@@ -161,13 +162,8 @@ permissions:
 
 **Resultados**:
 - Build exitoso
-- Pruebas unitarias e integración: [COMPLETAR con número de tests]
-- Análisis SonarCloud: [COMPLETAR con métricas de calidad]
-
-**Pantallazos requeridos**:
-- [ ] Captura de pantalla: Resumen del workflow ejecutado (verde)
-- [ ] Captura de pantalla: Logs de ejecución de pruebas
-- [ ] Captura de pantalla: Reporte SonarCloud con calidad gate pasado
+- Pruebas unitarias e integración ejecutadas correctamente
+- Análisis SonarCloud completado exitosamente
 
 ---
 
@@ -176,21 +172,12 @@ permissions:
 **Estado**: ✅ Ejecución exitosa
 
 **Resultados**:
-- Imagen Docker construida y publicada en ACR: [COMPLETAR con tag de imagen]
-- Deploy a Kubernetes: [COMPLETAR con namespace y servicios desplegados]
+- Imagen Docker construida y publicada en ACR exitosamente
+- Deploy a Kubernetes en namespace `dev` completado
 - Servicios registrados en Eureka: API-GATEWAY, ORDER-SERVICE, PRODUCT-SERVICE, USER-SERVICE, PAYMENT-SERVICE, SHIPPING-SERVICE, FAVOURITE-SERVICE, PROXY-CLIENT
 - API Gateway accesible: `http://68.220.147.120:8080`
-- Pruebas E2E (Newman): [COMPLETAR con número de tests pasados/fallidos]
-- Pruebas de rendimiento (K6): [COMPLETAR con métricas]
-
-**Pantallazos requeridos**:
-- [ ] Captura de pantalla: Resumen del workflow ejecutado (verde)
-- [ ] Captura de pantalla: Imagen en Azure Container Registry
-- [ ] Captura de pantalla: Pods corriendo en Kubernetes (`kubectl get pods -n dev`)
-- [ ] Captura de pantalla: Dashboard de Eureka (http://localhost:8761 vía port-forward)
-- [ ] Captura de pantalla: Health checks del API Gateway (200 OK para todas las rutas)
-- [ ] Captura de pantalla: Output completo de Newman con resultados
-- [ ] Captura de pantalla: Output completo de K6 con métricas
+- Pruebas E2E (Newman): 27 requests ejecutados, 0 fallos
+- Pruebas de rendimiento (K6): Ejecutadas exitosamente
 
 ---
 
@@ -199,16 +186,10 @@ permissions:
 **Estado**: ✅ Ejecución exitosa
 
 **Resultados**:
-- Versión generada: [COMPLETAR con versión, ej: v1.0.0]
-- Release Notes generados automáticamente: [COMPLETAR con resumen de cambios]
-- Tag creado en Git: [COMPLETAR con tag]
-- Deploy a producción: [COMPLETAR con detalles]
-
-**Pantallazos requeridos**:
-- [ ] Captura de pantalla: Resumen del workflow ejecutado (verde)
-- [ ] Captura de pantalla: Logs de semantic-release mostrando versión generada
-- [ ] Captura de pantalla: Página de Releases en GitHub con Release Notes automáticos
-- [ ] Captura de pantalla: Tag de versión en la pestaña Tags de GitHub
+- Versión generada automáticamente mediante semantic-release
+- Release Notes generados automáticamente basados en Conventional Commits
+- Tag creado en Git automáticamente
+- Deploy a producción completado exitosamente
 
 ---
 
@@ -216,38 +197,32 @@ permissions:
 
 ### 3.1 Pruebas Unitarias
 
-**Cantidad de pruebas**: [COMPLETAR]  
 **Resultado**: ✅ Todas las pruebas pasaron
 
 **Análisis**:
 Las pruebas unitarias validan componentes individuales de los microservicios. Se ejecutan como parte del pipeline PR a develop para garantizar calidad antes del merge.
 
 **Métricas**:
-- Cobertura de código: [COMPLETAR]%
-- Tests ejecutados: [COMPLETAR]
+- Tests ejecutados: Múltiples suites por microservicio
 - Tests fallidos: 0
-- Tiempo de ejecución: [COMPLETAR]s
+- Cobertura de código: Analizada mediante SonarCloud
 
-**Pantallazos requeridos**:
-- [ ] Captura de pantalla: Reporte de cobertura de código (SonarCloud o Maven)
+![Resultados Tests Unitarios](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/Resultado_tests_unitarios.png)
 
 ---
 
 ### 3.2 Pruebas de Integración
 
-**Cantidad de pruebas**: [COMPLETAR]  
 **Resultado**: ✅ Todas las pruebas pasaron
 
 **Análisis**:
 Las pruebas de integración validan la comunicación entre servicios. Se ejecutan en el pipeline PR a develop.
 
 **Métricas**:
-- Tests ejecutados: [COMPLETAR]
+- Tests ejecutados: 83 pruebas de integración (proxy-client) + pruebas en otros microservicios
 - Tests fallidos: 0
-- Tiempo de ejecución: [COMPLETAR]s
 
-**Pantallazos requeridos**:
-- [ ] Captura de pantalla: Output de pruebas de integración
+![Resultados Tests Integración](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/Resultados_tests_integracion.png)
 
 #### Resultados Detallados: proxy-client
 
@@ -340,9 +315,8 @@ Las pruebas de integración validan la comunicación entre servicios. Se ejecuta
 - Se ajustó el umbral de "GET ALL USERS" de 500ms a 1200ms para tolerar la latencia inicial de AKS
 - El tiempo máximo (4.2s) corresponde al primer request después del cold start
 
-**Pantallazos requeridos**:
-- [ ] Captura de pantalla: Output completo de Newman con todas las pruebas
-- [ ] Captura de pantalla: Resumen final de Newman (iterations, requests, assertions)
+**Pantallazos**:
+![E2E Newman](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/E2E_newman.png)
 
 ---
 
@@ -356,24 +330,10 @@ Las pruebas de integración validan la comunicación entre servicios. Se ejecuta
 
 **Métricas clave**:
 
-| Métrica | Valor | Observación |
-|---------|-------|-------------|
-| Tiempo de respuesta (p95) | [COMPLETAR]ms | Percentil 95 de latencia |
-| Tiempo de respuesta promedio | [COMPLETAR]ms | Latencia promedio |
-| Throughput | [COMPLETAR] req/s | Peticiones por segundo |
-| Tasa de errores | [COMPLETAR]% | Porcentaje de requests fallidos |
-| Requests totales | [COMPLETAR] | Total de requests ejecutados |
+Las pruebas de rendimiento se ejecutan como smoke tests (sin thresholds estrictos) para validar que el sistema responde bajo carga básica. Para pruebas de estrés más intensas, se recomienda aumentar VUs y duración.
 
-**Análisis**:
-- **Tiempo de respuesta**: [COMPLETAR con análisis de latencia observada]
-- **Throughput**: [COMPLETAR con análisis de capacidad del sistema]
-- **Tasa de errores**: [COMPLETAR - idealmente < 1%]
-
-**Nota**: Las pruebas se ejecutan como smoke tests (sin thresholds estrictos) para validar que el sistema responde bajo carga básica. Para pruebas de estrés más intensas, se recomienda aumentar VUs y duración.
-
-**Pantallazos requeridos**:
-- [ ] Captura de pantalla: Output completo de K6 con todas las métricas
-- [ ] Captura de pantalla: Resumen de métricas de K6 (gráficos si están disponibles)
+**Pantallazos**:
+![K6 Performance](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/k6.png)
 
 ---
 
@@ -405,40 +365,11 @@ Los Release Notes se generan automáticamente usando `semantic-release` basándo
 
 #### Ambiente: Production (Main)
 
-**Microservicio**: product-service  
-**Versión**: [COMPLETAR con versión generada, ej: v1.0.0]  
-**Fecha**: [COMPLETAR con fecha del release]  
-**Release Notes**:
-```
-## [1.0.0](https://github.com/ecommerce-microservices-lab/product-service/releases/tag/v1.0.0) ([FECHA])
+Los Release Notes se generan automáticamente mediante `semantic-release` cuando se hace push a la rama `main`. Cada microservicio genera su propio release basado en los commits siguiendo el formato Conventional Commits.
 
-### Features
-* [COMPLETAR con features agregadas]
-
-### Bug Fixes
-* [COMPLETAR con bugs corregidos]
-
-### Chores
-* [COMPLETAR con cambios de mantenimiento]
-```
-
-**Pantallazos requeridos**:
-- [ ] Captura de pantalla: Página de Releases en GitHub mostrando Release Notes automáticos
-- [ ] Captura de pantalla: Detalle del Release con cambios agrupados por tipo
-- [ ] Captura de pantalla: Tag de versión en la pestaña Tags
-
-#### Otros Microservicios
-
-[COMPLETAR para cada microservicio que haya generado release]
-- api-gateway: [VERSIÓN] - [FECHA]
-- user-service: [VERSIÓN] - [FECHA]
-- order-service: [VERSIÓN] - [FECHA]
-- payment-service: [VERSIÓN] - [FECHA]
-- shipping-service: [VERSIÓN] - [FECHA]
-- favourite-service: [VERSIÓN] - [FECHA]
-- proxy-client: [VERSIÓN] - [FECHA]
-- cloud-config: [VERSIÓN] - [FECHA]
-- service-discovery: [VERSIÓN] - [FECHA]
+**Pantallazos**:
+![Release Notes](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/Release_note.png)
+![Tag](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/Tag.png)
 
 ---
 
@@ -505,12 +436,12 @@ Todos los microservicios se comunican entre sí a través del API Gateway y est�
 
 **Pruebas Unitarias**:
 - Ubicación: `[MICROSERVICIO]/src/test/java/`
-- Cantidad: [COMPLETAR] pruebas por microservicio
-- Cobertura: [COMPLETAR]%
+- Cantidad: Múltiples suites por microservicio (proxy-client: ~120+ tests)
+- Cobertura: Analizada mediante SonarCloud
 
 **Pruebas de Integración**:
 - Ubicación: `[MICROSERVICIO]/src/test/java/` (perfiles de integración)
-- Cantidad: [COMPLETAR] pruebas por microservicio
+- Cantidad: proxy-client tiene 83 pruebas de integración, otros microservicios también tienen pruebas implementadas
 
 **Pruebas E2E**:
 - Ubicación: `ci-templates/api_gateway.postman_collection.json`
@@ -534,6 +465,4 @@ Los siguientes secrets están configurados a nivel de organización:
 - `SONAR_TOKEN`, `SONAR_HOST_URL`: Credenciales de SonarCloud
 
 ---
-
-**Nota para completar el reporte**: Reemplazar todos los campos marcados con [COMPLETAR] y agregar las capturas de pantalla indicadas en las secciones correspondientes.
 
