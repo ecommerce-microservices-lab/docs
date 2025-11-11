@@ -466,3 +466,76 @@ Los siguientes secrets están configurados a nivel de organización:
 
 ---
 
+## 7. Backend Remoto de Terraform (S3 + DynamoDB)
+
+### 7.1 Configuración del Backend Remoto
+
+**Objetivo**: Implementar un backend remoto para Terraform usando AWS S3 para almacenar el estado y DynamoDB para el bloqueo de estado, permitiendo trabajo colaborativo y prevención de conflictos.
+
+**Componentes Implementados**:
+
+1. **Bucket S3**: `microservices-terraform-state-658250199880`
+   - Región: `us-east-2` (Ohio)
+   - Versionado: Habilitado
+   - Cifrado: SSE-S3
+   - Acceso público: Bloqueado
+
+2. **Tabla DynamoDB**: `terraform-state-lock`
+   - Región: `us-east-2` (Ohio)
+   - Modo de facturación: PAY_PER_REQUEST
+   - Propósito: Bloqueo de estado para prevenir conflictos
+
+3. **Configuración en Terraform**:
+   ```hcl
+   backend "s3" {
+     bucket         = "microservices-terraform-state-658250199880"
+     key            = "terraform/azure/terraform.tfstate"
+     region         = "us-east-2"
+     encrypt        = true
+     dynamodb_table = "terraform-state-lock"
+   }
+   ```
+
+### 7.2 Prueba de Bloqueo de Estado
+
+**Objetivo**: Demostrar que el mecanismo de bloqueo funciona correctamente, previniendo que múltiples procesos modifiquen el estado simultáneamente.
+
+**Procedimiento**:
+1. Terminal 1: Ejecuta `terraform plan` (adquiere el lock)
+2. Terminal 2: Intenta ejecutar `terraform plan` simultáneamente (debe fallar con error de lock)
+3. Terminal 3: Verifica el lock en DynamoDB
+
+**Resultados**:
+- ✅ Lock adquirido exitosamente en Terminal 1
+- ✅ Terminal 2 muestra error de lock (bloqueo funcionando)
+- ✅ Lock visible en DynamoDB durante la operación
+- ✅ Lock liberado automáticamente al finalizar la operación
+
+**Pantallazos**:
+![Terminal 1 - Adquisición de Lock](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/s3_remoto_terminal1.png)
+![Terminal 2 - Error de Lock](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/s3_remoto_terminal2.png)
+![Terminal 3 - Verificación en DynamoDB](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/s3_remoto_terminal_3.png)
+
+### 7.3 Beneficios del Backend Remoto
+
+1. **Trabajo Colaborativo**: Múltiples desarrolladores pueden trabajar con el mismo estado
+2. **Prevención de Conflictos**: DynamoDB bloquea el estado durante operaciones
+3. **Versionado**: S3 mantiene historial de versiones del estado
+4. **Seguridad**: Estado cifrado y acceso controlado
+5. **Respaldo**: Estado almacenado de forma remota y segura
+
+### 7.4 Comandos Útiles
+
+```bash
+# Ver estado en S3
+aws s3 ls s3://microservices-terraform-state-658250199880/terraform/azure/
+
+# Ver locks en DynamoDB
+aws dynamodb scan --table-name terraform-state-lock --region us-east-2
+
+# Forzar liberación de lock (si es necesario)
+terraform force-unlock <LOCK_ID>
+```
+
+---
+
