@@ -6,6 +6,32 @@
 
 ---
 
+## Estrategia de Branching
+
+Para este proyecto, hemos implementado la estrategia de branching GitFlow, porque ofrece un marco robusto para gestionar tanto los flujos de trabajo de desarrollo como los de operaciones.
+
+### Estrategia de Branching para desarrollo
+
+Nuestra estrategia de ramas para desarrollo sigue el modelo GitFlow con las siguientes ramas:
+
+- **main**: Código listo para producción que ha sido debidamente probado y está listo para desplegarse.
+- **develop**: Rama de integración para las funcionalidades que están en desarrollo.
+- **feature/***: Ramas individuales de características creadas desde `develop` y que se fusionan de vuelta en `develop`.
+- **hotfix/***: Correcciones de emergencia para problemas en producción; se crean desde `main` y se fusionan tanto en `main` como en `develop`.
+- **release/***: Ramas de preparación para las releases; se crean desde `develop` y se fusionan en `main` y en `develop`.
+
+Esta estrategia nos permite como desarrolladores trabajar en características de forma aislada mientras se mantiene una base de código estable.
+
+### Estrategia de Branching para operaciones
+
+Para operaciones, extendemos el modelo GitFlow con ramas específicas por entorno:
+
+- **env/dev**: Configuración específica para el entorno de desarrollo.
+- **env/prod**: Configuración específica para el entorno de producción.
+- **infra/***: Cambios de infraestructura que se prueban secuencialmente en cada entorno.
+
+Este enfoque asegura que los cambios de infraestructura sigan una ruta de promoción controlada desde desarrollo hasta producción, reduciendo el riesgo de deriva de configuración y problemas en los despliegues.
+
 ## 1. Configuración de Pipelines
 
 ### 1.1 Pipeline: PR a Develop (Dev Environment)
