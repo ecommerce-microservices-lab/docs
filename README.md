@@ -853,3 +853,158 @@ Se creó un script automatizado para aplicar RBAC en cualquier namespace:
 
 ---
 
+## 9. Infraestructura Multi-Cloud (Azure AKS + GCP GKE)
+
+### 9.1 Objetivo
+
+Implementar infraestructura multi-cloud utilizando **Azure AKS** y **GCP GKE** como plataformas de orquestación de contenedores, con código Terraform modular y backend remoto con bloqueo.
+
+**HU**: HU 12 - Infraestructura Multi-Cloud y Terragrunt (8 SP)
+
+---
+
+### 9.2 Arquitectura Implementada
+
+#### Componentes Multi-Cloud
+
+1. **Azure AKS** (Azure Kubernetes Service)
+   - **Cluster**: `microservices-cluster-prod`
+   - **Región**: `eastus2`
+   - **Nodos**: 2 × `Standard_D2s_v3` (2 vCPU, 8 GB RAM)
+   - **Container Registry**: `microservicesacr5fa48984.azurecr.io`
+
+2. **GCP GKE** (Google Kubernetes Engine)
+   - **Cluster**: `microservices-cluster-gke-prod`
+   - **Zona**: `us-central1-a`
+   - **Nodos**: 2 × `e2-medium` (2 vCPU, 4 GB RAM, autoscaling 1-3)
+   - **VPC**: Nativa con subnet dedicada
+
+3. **Backend Remoto** (AWS S3 + DynamoDB)
+   - **Bucket**: `microservices-terraform-state-658250199880`
+   - **Lock Table**: `terraform-state-lock`
+   - **Estado**: Unificado para ambos proveedores
+
+#### Documentación Detallada
+
+- **Diagrama de Arquitectura**: [`docs/infra/ARQUITECTURA_MULTICLOUD.md`](infra/ARQUITECTURA_MULTICLOUD.md)
+- **Comparativa de Costos/Performance**: [`docs/infra/COMPARATIVA_COSTOS_PERFORMANCE.md`](infra/COMPARATIVA_COSTOS_PERFORMANCE.md)
+
+---
+
+### 9.3 Código Terraform Modular
+
+**Estructura**:
+```
+infra/terraform/
+├── main.tf              # Recursos principales
+├── providers.tf         # Backend S3 + Providers
+├── modules/
+    ├── aks/            # Módulo reutilizable para AKS
+    └── gke/            # Módulo reutilizable para GKE
+```
+
+**Características**:
+- ✅ Módulos reutilizables para AKS y GKE
+- ✅ Variables parametrizadas por entorno
+- ✅ Outputs para integración con CI/CD
+
+---
+
+### 9.4 Backend Remoto con Bloqueo
+
+**Configuración**:
+- **Backend**: AWS S3 (`microservices-terraform-state-658250199880`)
+- **Lock**: DynamoDB (`terraform-state-lock`)
+- **Estado**: Unificado para Azure y GCP
+
+**Beneficios**:
+- ✅ Prevención de conflictos concurrentes
+- ✅ Versionado del estado
+- ✅ Trabajo colaborativo seguro
+
+**Documentación**: Ver sección [7. Backend Remoto de Terraform (S3 + DynamoDB)](#7-backend-remoto-de-terraform-s3--dynamodb)
+
+---
+
+### 9.5 Comparativa de Costos y Performance
+
+#### Resumen de Costos (por hora)
+
+| Proveedor | Cluster | Nodos (2) | Total |
+|-----------|---------|-----------|-------|
+| **Azure AKS** | $0.10 | ~$0.192 | **~$0.292/hora** |
+| **GCP GKE** | $0.10 | ~$0.134 | **~$0.234/hora** |
+
+**Diferencia**: GKE es aproximadamente **20% más económico**.
+
+#### Performance
+
+| Métrica | Azure AKS | GCP GKE |
+|---------|-----------|---------|
+| **RAM por Nodo** | 8 GB | 4 GB |
+| **Disco por Nodo** | 128 GB | 20 GB |
+| **Auto-scaling** | Manual | Automático (1-3) |
+
+**Documentación Completa**: [`docs/infra/COMPARATIVA_COSTOS_PERFORMANCE.md`](infra/COMPARATIVA_COSTOS_PERFORMANCE.md)
+
+---
+
+### 9.6 Cumplimiento del DoD (Definition of Done)
+
+#### ✅ DoD 1: Código Terraform/Terragrunt modular
+- ✅ Módulos reutilizables para AKS (`modules/aks/`)
+- ✅ Módulos reutilizables para GKE (`modules/gke/`)
+- ✅ Código organizado y versionado
+
+#### ✅ DoD 2: Backends remotos configurados con bloqueo
+- ✅ Backend S3 configurado y funcionando
+- ✅ DynamoDB para bloqueo de estado
+- ✅ Bloqueo demostrado y documentado
+
+#### ✅ DoD 3: terraform plan/apply exitoso
+- ✅ `terraform apply` exitoso para AKS (Azure)
+- ✅ `terraform apply` exitoso para GKE (GCP)
+- ✅ Ambos clusters funcionando correctamente
+
+#### ✅ DoD 4: Diagrama de arquitectura multi-cloud
+- ✅ Diagrama creado en `docs/infra/ARQUITECTURA_MULTICLOUD.md`
+- ✅ Diagrama Mermaid con todos los componentes
+- ✅ Documentación completa de la arquitectura
+
+#### ✅ DoD 5: Tabla comparativa de costos/performance
+- ✅ Tabla comparativa creada en `docs/infra/COMPARATIVA_COSTOS_PERFORMANCE.md`
+- ✅ Comparativa de costos, performance y características
+- ✅ Recomendaciones y estrategias de optimización
+
+---
+
+### 9.7 Comandos Útiles
+
+```bash
+# Verificar estado de clusters
+az aks list --query "[].{Name:name, Status:powerState.code}"
+gcloud container clusters list
+
+# Conectar a clusters
+az aks get-credentials --name microservices-cluster-prod --resource-group microservices-rg
+gcloud container clusters get-credentials microservices-cluster-gke-prod --zone us-central1-a
+
+# Ver nodos
+kubectl get nodes
+
+# Ver pods en ambos clusters
+kubectl get pods -n prod
+```
+
+---
+
+### 9.8 Ventajas de la Arquitectura Multi-Cloud
+
+1. **Resiliencia**: Redundancia entre proveedores
+2. **Flexibilidad**: No dependencia de un solo proveedor
+3. **Optimización de Costos**: Comparación y optimización continua
+4. **Compliance**: Cumplimiento de requisitos geográficos
+5. **Innovación**: Acceso a servicios únicos de cada proveedor
+
+---
+
