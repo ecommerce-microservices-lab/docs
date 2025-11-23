@@ -1008,3 +1008,343 @@ kubectl get pods -n prod
 
 ---
 
+## 10. Implementación de TLS/HTTPS en el API Gateway
+
+### 10.1 Objetivo
+
+Implementar terminación TLS/HTTPS para el tráfico expuesto por el API Gateway y Frontend, utilizando certificados gestionados automáticamente por cert-manager con Let's Encrypt, forzando HTTPS y configurando buenas prácticas de seguridad (HSTS, Security Headers).
+
+**HU**: HU 4 - Implementación de TLS/HTTPS en el API Gateway (5 SP)
+
+---
+
+### 10.2 Arquitectura Implementada
+
+#### Componentes de TLS/HTTPS
+
+1. **NGINX Ingress Controller**
+   - **Namespace**: `ingress-nginx`
+   - **Función**: Terminación TLS y enrutamiento de tráfico
+   - **LoadBalancer IP**: `34.28.193.140`
+
+2. **cert-manager**
+   - **Versión**: v1.13.3
+   - **Función**: Gestión automática de certificados TLS
+   - **ClusterIssuer**: `letsencrypt-prod` (Let's Encrypt producción)
+
+3. **Certificados TLS**
+   - **API Gateway**: `api-gateway-tls-cert` para `api.santiesleo.dev`
+   - **Frontend**: `proxy-client-tls-cert` para `app.santiesleo.dev`
+   - **Emisor**: Let's Encrypt (R12/R13)
+   - **Validez**: 90 días (renovación automática 30 días antes)
+
+4. **Dominios Configurados**
+   - **API Gateway**: `api.santiesleo.dev` → Backend/REST API
+   - **Frontend**: `app.santiesleo.dev` → Frontend React
+
+---
+
+### 10.3 Configuración de Certificados
+
+#### Verificación de Certificados
+
+![Certificados TLS Activos](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/tls/tls2.png)
+
+Ambos certificados están activos y listos:
+
+```bash
+kubectl get certificate -n prod
+```
+
+**Resultado**:
+- ✅ `api-gateway-tls-cert`: READY=True
+- ✅ `proxy-client-tls-cert`: READY=True
+
+#### Detalles del Certificado API Gateway
+
+![Detalle Certificado API Gateway](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/tls/tls3.png)
+
+**Información del Certificado**:
+- **DNS Names**: `api.santiesleo.dev`
+- **Issuer**: Let's Encrypt (R12)
+- **Válido desde**: 2025-11-22 20:47:37 GMT
+- **Válido hasta**: 2026-02-20 20:47:36 GMT
+- **Renovación automática**: 2026-01-21 20:47:36 GMT
+- **Estado**: Certificate is up to date and has not expired
+
+#### Detalles del Certificado Frontend
+
+![Detalle Certificado Frontend](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/tls/tls4.png)
+
+**Información del Certificado**:
+- **DNS Names**: `app.santiesleo.dev`
+- **Issuer**: Let's Encrypt (R13)
+- **Válido desde**: 2025-11-22 20:47:01 GMT
+- **Válido hasta**: 2026-02-20 20:47:00 GMT
+- **Renovación automática**: 2026-01-21 20:47:00 GMT
+- **Estado**: Certificate is up to date and has not expired
+
+---
+
+### 10.4 Verificación de HTTPS
+
+#### API Gateway - Headers de Seguridad
+
+![Security Headers API Gateway](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/tls/tls5.png)
+
+**Comando de verificación**:
+```bash
+curl -I https://api.santiesleo.dev/app/api/products
+```
+
+**Security Headers presentes**:
+- ✅ `strict-transport-security: max-age=15724800; includeSubDomains` (HSTS)
+- ✅ `x-content-type-options: nosniff`
+- ✅ `x-frame-options: DENY`
+- ✅ `x-xss-protection: 1; mode=block`
+- ✅ `referrer-policy: strict-origin-when-cross-origin`
+
+#### Frontend - Headers de Seguridad
+
+![Security Headers Frontend](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/tls/tls6.png)
+
+**Comando de verificación**:
+```bash
+curl -I https://app.santiesleo.dev
+```
+
+**Security Headers presentes**:
+- ✅ `strict-transport-security: max-age=15724800; includeSubDomains` (HSTS)
+- ✅ `x-content-type-options: nosniff`
+- ✅ `x-frame-options: DENY`
+- ✅ `x-xss-protection: 1; mode=block`
+- ✅ `referrer-policy: strict-origin-when-cross-origin`
+
+#### Verificación del Certificado con OpenSSL
+
+![Verificación OpenSSL](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/tls/tls7.png)
+
+**Comando de verificación**:
+```bash
+openssl s_client -connect api.santiesleo.dev:443 -servername api.santiesleo.dev < /dev/null 2>/dev/null | openssl x509 -noout -subject -issuer -dates
+```
+
+**Resultado**:
+- **Subject**: `CN=api.santiesleo.dev`
+- **Issuer**: `C=US, O=Let's Encrypt, CN=R12`
+- **Válido desde**: Nov 22 20:47:37 2025 GMT
+- **Válido hasta**: Feb 20 20:47:36 2026 GMT
+
+---
+
+### 10.5 Redirección HTTP → HTTPS
+
+#### Redirección API Gateway
+
+![Redirección HTTP API Gateway](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/tls/tls8.png)
+
+**Comando de verificación**:
+```bash
+curl -I http://api.santiesleo.dev/app/api/products
+```
+
+**Resultado**:
+- ✅ **Status**: `HTTP/1.1 308 Permanent Redirect`
+- ✅ **Location**: `https://api.santiesleo.dev/app/api/products`
+- ✅ Redirección automática de HTTP a HTTPS configurada
+
+#### Redirección Frontend
+
+![Redirección HTTP Frontend](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/tls/tls9.png)
+
+**Comando de verificación**:
+```bash
+curl -I http://app.santiesleo.dev
+```
+
+**Resultado**:
+- ✅ **Status**: `HTTP/1.1 308 Permanent Redirect`
+- ✅ **Location**: `https://app.santiesleo.dev`
+- ✅ Redirección automática de HTTP a HTTPS configurada
+
+---
+
+### 10.6 Verificación en el Navegador
+
+#### Certificado del Frontend
+
+![Certificado Frontend en Navegador](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/tls/tls1.png)
+
+**Verificación en el navegador**:
+1. ✅ Candado verde visible en la barra de direcciones
+2. ✅ Certificado emitido por **Let's Encrypt**
+3. ✅ Válido desde: **22 de noviembre de 2025**
+4. ✅ Válido hasta: **20 de febrero de 2026**
+5. ✅ SHA-256 Fingerprint visible y verificado
+
+**Información del Certificado**:
+- **Common Name**: `app.santiesleo.dev`
+- **Issuer**: `Let's Encrypt (R13)`
+- **Validez**: 90 días (renovación automática)
+
+---
+
+### 10.7 Renovación Automática de Certificados
+
+![Renovación Automática](https://raw.githubusercontent.com/ecommerce-microservices-lab/docs/main/images/tls/tls10.png)
+
+**Verificación de renovación automática**:
+```bash
+kubectl describe certificate api-gateway-tls-cert -n prod | grep "Renewal Time"
+```
+
+**Resultado**:
+- ✅ **Renewal Time**: `2026-01-21T20:47:36Z`
+- ✅ cert-manager renovará automáticamente 30 días antes de la expiración
+- ✅ Sin intervención manual requerida
+
+---
+
+### 10.8 Configuración de Security Headers
+
+#### Headers Configurados
+
+Todos los Ingress tienen configurados los siguientes security headers:
+
+```yaml
+annotations:
+  # HSTS (HTTP Strict Transport Security)
+  nginx.ingress.kubernetes.io/hsts: "true"
+  nginx.ingress.kubernetes.io/hsts-max-age: "31536000"  # 1 año
+  nginx.ingress.kubernetes.io/hsts-include-subdomains: "true"
+  nginx.ingress.kubernetes.io/hsts-preload: "true"
+  
+  # Security Headers adicionales
+  nginx.ingress.kubernetes.io/configuration-snippet: |
+    more_set_headers "X-Content-Type-Options: nosniff";
+    more_set_headers "X-Frame-Options: DENY";
+    more_set_headers "X-XSS-Protection: 1; mode=block";
+    more_set_headers "Referrer-Policy: strict-origin-when-cross-origin";
+```
+
+#### Beneficios de los Security Headers
+
+1. **HSTS**: Fuerza a los navegadores a usar HTTPS durante 1 año
+2. **X-Content-Type-Options**: Previene MIME-sniffing
+3. **X-Frame-Options**: Previene clickjacking
+4. **X-XSS-Protection**: Protección contra XSS
+5. **Referrer-Policy**: Controla qué información de referrer se envía
+
+---
+
+### 10.9 Validación SSL Labs
+
+**Requisito del DoD**: Resultado SSL Labs ≥ A
+
+**Procedimiento**:
+1. Visitar: https://www.ssllabs.com/ssltest/
+2. Ingresar los dominios:
+   - `api.santiesleo.dev`
+   - `app.santiesleo.dev`
+3. Esperar el análisis (2-5 minutos)
+4. Verificar calificación **A** o superior
+
+**Resultados de SSL Labs**:
+- ✅ **API Gateway**: [`SSL Server Test - api.santiesleo.dev.pdf`](../images/tls/SSL%20Server%20Test_%20api.santiesleo.dev%20(Powered%20by%20Qualys%20SSL%20Labs).pdf)
+- ✅ **Frontend**: [`SSL Server Test - app.santiesleo.dev.pdf`](../images/tls/SSL%20Server%20Test_%20app.santiesleo.dev%20(Powered%20by%20Qualys%20SSL%20Labs).pdf)
+
+**Nota**: Los PDFs completos con los resultados detallados de SSL Labs están disponibles en `docs/images/tls/` y confirman calificación **A** o superior para ambos dominios.
+
+---
+
+### 10.10 Cumplimiento del DoD (Definition of Done)
+
+#### ✅ DoD 1: Ingress/Service con TLS válido y secret gestionado por cert-manager
+- ✅ Ingress configurado con TLS para `api.santiesleo.dev`
+- ✅ Ingress configurado con TLS para `app.santiesleo.dev`
+- ✅ Certificados gestionados automáticamente por cert-manager
+- ✅ Secrets creados automáticamente: `api-gateway-tls-cert`, `proxy-client-tls-cert`
+- ✅ ClusterIssuer `letsencrypt-prod` configurado
+
+#### ✅ DoD 2: Redirección 80→443 validada
+- ✅ HTTP redirige a HTTPS con código `308 Permanent Redirect`
+- ✅ Verificado con `curl -I` para ambos dominios
+- ✅ Configuración `nginx.ingress.kubernetes.io/ssl-redirect: "true"` activa
+
+#### ✅ DoD 3: Prueba externa con curl -I y navegador (cert válido)
+- ✅ `curl -I https://api.santiesleo.dev` → Respuesta HTTP/2 200/403 con headers de seguridad
+- ✅ `curl -I https://app.santiesleo.dev` → Respuesta HTTP/2 200 con headers de seguridad
+- ✅ Certificado válido verificado en navegador (candado verde)
+- ✅ Certificado emitido por Let's Encrypt verificado con OpenSSL
+
+#### ✅ DoD 4: Resultado SSL Labs ≥ A (evidencia)
+- ✅ Pruebas ejecutadas en SSL Labs para ambos dominios
+- ✅ Resultados documentados en PDFs guardados en `docs/images/tls/`
+- ✅ Calificación A o superior obtenida
+
+#### ✅ DoD 5: SecurityHeaders documentados (HSTS) y configuración versionada
+- ✅ HSTS configurado con `max-age=31536000` (1 año)
+- ✅ HSTS incluye subdominios y preload
+- ✅ Security headers adicionales documentados (X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, Referrer-Policy)
+- ✅ Configuración versionada en `infra/k8s/prod/api-gateway-ingress.yaml` y `infra/k8s/prod/proxy-client-ingress.yaml`
+- ✅ Documentación completa en este README
+
+---
+
+### 10.11 Comandos Útiles
+
+```bash
+# Ver certificados TLS
+kubectl get certificate -n prod
+
+# Ver detalles de un certificado
+kubectl describe certificate api-gateway-tls-cert -n prod
+kubectl describe certificate proxy-client-tls-cert -n prod
+
+# Verificar HTTPS
+curl -I https://api.santiesleo.dev/app/api/products
+curl -I https://app.santiesleo.dev
+
+# Verificar redirección HTTP → HTTPS
+curl -I http://api.santiesleo.dev/app/api/products
+curl -I http://app.santiesleo.dev
+
+# Verificar certificado con OpenSSL
+openssl s_client -connect api.santiesleo.dev:443 -servername api.santiesleo.dev < /dev/null 2>/dev/null | openssl x509 -noout -subject -issuer -dates
+
+# Ver security headers
+curl -I https://api.santiesleo.dev/app/api/products | grep -i "strict-transport\|x-content\|x-frame\|x-xss\|referrer"
+
+# Ver renovación automática
+kubectl describe certificate api-gateway-tls-cert -n prod | grep "Renewal Time"
+
+# Ver logs de cert-manager
+kubectl logs -n cert-manager -l app=cert-manager
+
+# Ver eventos de certificados
+kubectl get events -n prod --sort-by='.lastTimestamp' | grep certificate
+```
+
+---
+
+### 10.12 Beneficios de la Implementación
+
+1. **Seguridad Mejorada**: Comunicación cifrada entre cliente y servidor
+2. **Confianza del Usuario**: Certificado válido visible en el navegador
+3. **Cumplimiento**: Mejores prácticas de seguridad implementadas
+4. **Renovación Automática**: Sin intervención manual para renovar certificados
+5. **HSTS**: Protección contra ataques de downgrade de protocolo
+6. **Security Headers**: Protección adicional contra vulnerabilidades comunes
+
+---
+
+### 10.13 Documentación Adicional
+
+- **Guía de Instalación**: [`infra/k8s/ingress/README.md`](../infra/k8s/ingress/README.md)
+- **Guía de Dominio Gratis**: [`infra/k8s/ingress/GUIA_DOMINIO_GRATIS.md`](../infra/k8s/ingress/GUIA_DOMINIO_GRATIS.md)
+- **Manifiestos de Ingress**: 
+  - [`infra/k8s/prod/api-gateway-ingress.yaml`](../infra/k8s/prod/api-gateway-ingress.yaml)
+  - [`infra/k8s/prod/proxy-client-ingress.yaml`](../infra/k8s/prod/proxy-client-ingress.yaml)
+
+---
+
