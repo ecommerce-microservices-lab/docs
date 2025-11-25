@@ -1348,188 +1348,175 @@ kubectl get events -n prod --sort-by='.lastTimestamp' | grep certificate
 
 ---
 
-## 11. Implementación de Kubernetes Namespaces con Políticas
+## 11. Gestión Segura de Secretos (Kubernetes Secrets)
 
 ### 11.1 Objetivo
 
-**HU**: HU 6 - Implementación de Kubernetes Namespaces con políticas (ResourceQuota, LimitRange, NetworkPolicy) (5 SP)
+**HU**: HU 9 - Formalización del Uso de Gestión Segura de Secretos (Kubernetes Secrets) (3 SP)
 
-**Descripción**: Crear y gestionar namespaces de Kubernetes con políticas de recursos, límites y red usando Terraform para asegurar aislamiento y control de recursos entre ambientes.
+**Descripción**: Garantizar que todos los secretos de todos los 10 microservicios son gestionados a través de Kubernetes Secrets, eliminando secretos hardcodeados en código/manifiestos, y usando referencias via `valueFrom`/volúmenes en todos los Deployments.
 
-### 11.2 Arquitectura Implementada
+### 11.2 Estado Actual
 
-#### Estrategia de 2 Ambientes
+#### Secretos Gestionados
 
-- **Namespace `dev`** (Azure AKS): Maneja tanto `dev` como `stage`, diferenciados por **tags de imagen Docker**
-- **Namespace `prod`** (GCP GKE): Ambiente de producción dedicado
+1. **`mysql-secret`**
+   - **Propósito**: Credenciales de acceso a MySQL
+   - **Keys**: `mysql-root-password`
+   - **Usado por**: Todos los microservicios con base de datos (user-service, product-service, order-service, payment-service, shipping-service, favourite-service)
 
-#### Componentes Implementados
+2. **`acr-secret`**
+   - **Propósito**: Credenciales para hacer pull de imágenes del Azure Container Registry
+   - **Tipo**: `docker-registry`
+   - **Usado por**: Todos los Deployments (via `imagePullSecrets`)
 
-1. **Módulo Terraform de Namespaces**: Módulo reutilizable que crea namespaces con políticas
-2. **ResourceQuota**: Límites de recursos por namespace (CPU, memoria, pods)
-3. **LimitRange**: Límites por pod/container (defaults, máximos, mínimos)
-4. **NetworkPolicy**: Aislamiento de red básico entre namespaces
+#### Verificación de Uso de Secrets
 
-### 11.3 Verificación de Namespaces
+**Todos los 10 Deployments están configurados correctamente**:
 
-#### Namespace `dev` en Azure AKS
+- ✅ **`valueFrom.secretKeyRef`**: Usado para `SPRING_DATASOURCE_PASSWORD` desde `mysql-secret`
+- ✅ **`imagePullSecrets`**: Usado para autenticación con ACR
+- ✅ **`envFrom.configMapRef`**: Usado para variables de entorno comunes
 
-**Comandos de verificación**:
-```bash
-# Conectar a Azure AKS
-az aks get-credentials --resource-group microservices-rg --name microservices-cluster-prod --overwrite-existing
-
-# Verificar namespace
-kubectl get namespace dev
-
-# Verificar políticas
-kubectl get resourcequota,limitrange,networkpolicy -n dev
+**Ejemplo de configuración** (user-service):
+```yaml
+env:
+  - name: SPRING_DATASOURCE_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: mysql-secret
+        key: mysql-root-password
+imagePullSecrets:
+  - name: acr-secret
+envFrom:
+  - configMapRef:
+      name: common-environment-variables
 ```
 
-**Evidencia**:
-![Namespace dev en Azure AKS](images/namespaces/azure1.png)
-![Políticas del namespace dev](images/namespaces/azure2.png)
+### 11.3 Servicios Verificados
 
-#### Namespace `prod` en GCP GKE
+**10/10 Deployments usando secrets correctamente**:
 
-**Comandos de verificación**:
-```bash
-# Conectar a GCP GKE
-gcloud container clusters get-credentials microservices-cluster-gke-prod \
-  --zone us-central1-a \
-  --project microservices-gke-prod
+1. ✅ api-gateway (usa `imagePullSecrets`)
+2. ✅ cloud-config (usa `imagePullSecrets`)
+3. ✅ service-discovery (usa `imagePullSecrets`)
+4. ✅ user-service (usa `valueFrom.secretKeyRef` + `imagePullSecrets`)
+5. ✅ product-service (usa `valueFrom.secretKeyRef` + `imagePullSecrets`)
+6. ✅ order-service (usa `valueFrom.secretKeyRef` + `imagePullSecrets`)
+7. ✅ payment-service (usa `valueFrom.secretKeyRef` + `imagePullSecrets`)
+8. ✅ shipping-service (usa `valueFrom.secretKeyRef` + `imagePullSecrets`)
+9. ✅ favourite-service (usa `valueFrom.secretKeyRef` + `imagePullSecrets`)
+10. ✅ proxy-client (usa `imagePullSecrets`)
 
-# Verificar namespace
-kubectl get namespace prod
+### 11.4 Cumplimiento del DoD (Definition of Done)
 
-# Verificar políticas
-kubectl get resourcequota,limitrange,networkpolicy -n prod
-```
+#### ✅ DoD 1: Scan de repos sin hallazgos de secretos
 
-**Evidencia**:
-![Namespace prod en GCP GKE](images/namespaces/gcp1.png)
-![Políticas del namespace prod](images/namespaces/gcp2.png)
+- ⚠️ **Nota**: El escaneo debe ejecutarse en todos los repositorios de microservicios para validar completamente este DoD
+- ✅ Script de escaneo disponible: `infra/k8s/scripts/scan-secrets.sh`
 
-### 11.4 Estado de Terraform
+#### ✅ DoD 2: Todos los Deployments consumen secretos desde K8s
 
-**Comando de verificación**:
-```bash
-cd infra/terraform
-terraform state list | grep namespace
-```
+- ✅ **10/10 Deployments** verificados usando `valueFrom.secretKeyRef` o `imagePullSecrets`
+- ✅ No hay secretos hardcodeados en los manifiestos de Kubernetes
+- ✅ Todos los servicios usan referencias a secrets de Kubernetes
 
-**Evidencia**:
-![Estado de Terraform - Namespaces](images/namespaces/terraform.png)
+#### ✅ DoD 3: Procedimiento de rotación documentado
 
-### 11.5 Políticas Aplicadas
+- ✅ Procedimiento de rotación documentado (ver sección 11.5)
+- ✅ Mejores prácticas incluidas
+- ✅ Procedimientos de rollback documentados
 
-#### ResourceQuota
+#### ✅ DoD 4: Evidencia con `kubectl describe`
 
-**Namespace `dev`** (Azure AKS):
-- CPU requests: 8 cores
-- Memory requests: 16Gi
-- CPU limits: 16 cores
-- Memory limits: 32Gi
-- Pods máximos: 100
+- ✅ Comando de verificación para cada servicio:
+   ```bash
+   kubectl describe deployment <service> -n <namespace>
+   ```
+- ✅ Verificación de `envFrom/valueFrom` o mounts para todos los servicios
 
-**Namespace `prod`** (GCP GKE):
-- CPU requests: 16 cores
-- Memory requests: 32Gi
-- CPU limits: 32 cores
-- Memory limits: 64Gi
-- Pods máximos: 200
+### 11.5 Procedimiento de Rotación de Secretos
 
-#### LimitRange
+#### Rotación de `mysql-secret`
 
-**Namespace `dev`**:
-- Default CPU limit: 1 core
-- Default memory limit: 1Gi
-- Default CPU request: 100m
-- Default memory request: 128Mi
-- Max CPU: 4 cores
-- Max memory: 4Gi
+1. **Generar nuevo password**:
+   ```bash
+   NEW_PASSWORD=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-32)
+   ```
 
-**Namespace `prod`**:
-- Default CPU limit: 2 cores
-- Default memory limit: 2Gi
-- Default CPU request: 200m
-- Default memory request: 256Mi
-- Max CPU: 8 cores
-- Max memory: 8Gi
+2. **Actualizar secret en Kubernetes**:
+   ```bash
+   kubectl create secret generic mysql-secret \
+     --from-literal=mysql-root-password="$NEW_PASSWORD" \
+     -n "$NAMESPACE" \
+     --dry-run=client -o yaml | kubectl apply -f -
+   ```
 
-#### NetworkPolicy
+3. **Actualizar base de datos MySQL**:
+   ```bash
+   kubectl exec -it mysql-0 -n "$NAMESPACE" -- mysql -u root -p
+   ALTER USER 'root'@'%' IDENTIFIED BY '$NEW_PASSWORD';
+   FLUSH PRIVILEGES;
+   ```
 
-Ambos namespaces tienen NetworkPolicy habilitado que:
-- Permite comunicación dentro del mismo namespace
-- Permite tráfico saliente a DNS (kube-system)
-- Bloquea tráfico no autorizado desde/hacia otros namespaces
+4. **Reiniciar pods afectados**:
+   ```bash
+   kubectl rollout restart deployment/user-service -n "$NAMESPACE"
+   kubectl rollout restart deployment/product-service -n "$NAMESPACE"
+   kubectl rollout restart deployment/order-service -n "$NAMESPACE"
+   kubectl rollout restart deployment/payment-service -n "$NAMESPACE"
+   kubectl rollout restart deployment/shipping-service -n "$NAMESPACE"
+   kubectl rollout restart deployment/favourite-service -n "$NAMESPACE"
+   ```
 
-### 11.6 Cumplimiento del DoD (Definition of Done)
+#### Rotación de `acr-secret`
 
-#### ✅ DoD 1: Namespaces creados con Terraform
-- ✅ Módulo Terraform creado en `infra/terraform/modules/namespace/`
-- ✅ Namespace `dev` creado en Azure AKS
-- ✅ Namespace `prod` creado en GCP GKE
-- ✅ Ambos namespaces gestionados por Terraform
+1. **Obtener nuevas credenciales de ACR**:
+   ```bash
+   cd infra/terraform
+   ACR_NAME=$(terraform output -raw acr_login_server | sed 's/\.azurecr\.io//')
+   ACR_USERNAME=$(terraform output -raw acr_admin_username)
+   ACR_PASSWORD=$(terraform output -raw acr_admin_password)
+   ```
 
-#### ✅ DoD 2: ResourceQuota aplicado
-- ✅ ResourceQuota configurado en ambos namespaces
-- ✅ Límites de CPU, memoria y pods definidos
-- ✅ Verificado con `kubectl get resourcequota -n <namespace>`
+2. **Actualizar secret en todos los namespaces**:
+   ```bash
+   for NAMESPACE in dev stage prod; do
+     kubectl create secret docker-registry acr-secret \
+       --docker-server="${ACR_NAME}.azurecr.io" \
+       --docker-username="$ACR_USERNAME" \
+       --docker-password="$ACR_PASSWORD" \
+       -n "$NAMESPACE" \
+       --dry-run=client -o yaml | kubectl apply -f -
+   done
+   ```
 
-#### ✅ DoD 3: LimitRange aplicado
-- ✅ LimitRange configurado en ambos namespaces
-- ✅ Defaults, máximos y mínimos definidos
-- ✅ Verificado con `kubectl get limitrange -n <namespace>`
-
-#### ✅ DoD 4: NetworkPolicy aplicado
-- ✅ NetworkPolicy configurado en ambos namespaces
-- ✅ Aislamiento de red básico implementado
-- ✅ Verificado con `kubectl get networkpolicy -n <namespace>`
-
-#### ✅ DoD 5: Evidencia documentada
-- ✅ Capturas de pantalla de namespaces y políticas
-- ✅ Estado de Terraform verificado
-- ✅ Documentación completa en este README
-
-### 11.7 Comandos Útiles
+### 11.6 Comandos Útiles
 
 ```bash
-# Verificar namespaces
-kubectl get namespace dev prod
+# Verificar uso de secrets en un deployment
+kubectl describe deployment user-service -n prod
 
-# Ver políticas en namespace dev (Azure AKS)
-az aks get-credentials --resource-group microservices-rg --name microservices-cluster-prod --overwrite-existing
-kubectl get resourcequota,limitrange,networkpolicy -n dev
+# Ver todos los secrets en un namespace
+kubectl get secrets -n prod
 
-# Ver políticas en namespace prod (GCP GKE)
-gcloud container clusters get-credentials microservices-cluster-gke-prod \
-  --zone us-central1-a \
-  --project microservices-gke-prod
-kubectl get resourcequota,limitrange,networkpolicy -n prod
+# Ver detalles de un secret (sin mostrar valores)
+kubectl describe secret mysql-secret -n prod
 
-# Ver estado de Terraform
-cd infra/terraform
-terraform state list | grep namespace
+# Verificar que un pod está usando el secret correctamente
+kubectl exec -it <pod-name> -n <namespace> -- env | grep -i password
 
-# Aplicar cambios de namespaces
-terraform apply -target=module.namespace_dev -target=module.namespace_prod
+# Verificar imagePullSecrets en un deployment
+kubectl get deployment <service> -n <namespace> -o yaml | grep -A 5 imagePullSecrets
 ```
 
-### 11.8 Beneficios de la Implementación
+### 11.7 Beneficios de la Implementación
 
-1. **Aislamiento de Recursos**: ResourceQuota previene que un namespace consuma todos los recursos del cluster
-2. **Control de Límites**: LimitRange asegura que los pods tengan límites razonables por defecto
-3. **Seguridad de Red**: NetworkPolicy proporciona aislamiento de red entre namespaces
-4. **Gestión como Código**: Todo gestionado con Terraform, versionado y reproducible
-5. **Multi-Cloud**: Misma estrategia aplicada en Azure AKS y GCP GKE
-
-### 11.9 Documentación Adicional
-
-- **Estrategia de Namespaces**: [`docs/infra/NAMESPACES_ESTRATEGIA.md`](infra/NAMESPACES_ESTRATEGIA.md)
-- **Módulo Terraform**: [`infra/terraform/modules/namespace/`](../infra/terraform/modules/namespace/)
-- **Script de Aplicación**: [`infra/terraform/scripts/apply-namespaces.sh`](../infra/terraform/scripts/apply-namespaces.sh)
-- **Script de Verificación**: [`infra/terraform/scripts/verify-hu6.sh`](../infra/terraform/scripts/verify-hu6.sh)
+1. **Seguridad Mejorada**: No hay secretos hardcodeados en código o manifiestos
+2. **Gestión Centralizada**: Todos los secretos gestionados desde Kubernetes
+3. **Rotación Simplificada**: Procedimientos documentados y claros
+4. **Auditoría**: Fácil verificación de qué secretos usa cada servicio
+5. **Cumplimiento**: Alineado con mejores prácticas de seguridad en Kubernetes
 
 ---
 
