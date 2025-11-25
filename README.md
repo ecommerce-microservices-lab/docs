@@ -1348,3 +1348,188 @@ kubectl get events -n prod --sort-by='.lastTimestamp' | grep certificate
 
 ---
 
+## 11. Implementación de Kubernetes Namespaces con Políticas
+
+### 11.1 Objetivo
+
+**HU**: HU 6 - Implementación de Kubernetes Namespaces con políticas (ResourceQuota, LimitRange, NetworkPolicy) (5 SP)
+
+**Descripción**: Crear y gestionar namespaces de Kubernetes con políticas de recursos, límites y red usando Terraform para asegurar aislamiento y control de recursos entre ambientes.
+
+### 11.2 Arquitectura Implementada
+
+#### Estrategia de 2 Ambientes
+
+- **Namespace `dev`** (Azure AKS): Maneja tanto `dev` como `stage`, diferenciados por **tags de imagen Docker**
+- **Namespace `prod`** (GCP GKE): Ambiente de producción dedicado
+
+#### Componentes Implementados
+
+1. **Módulo Terraform de Namespaces**: Módulo reutilizable que crea namespaces con políticas
+2. **ResourceQuota**: Límites de recursos por namespace (CPU, memoria, pods)
+3. **LimitRange**: Límites por pod/container (defaults, máximos, mínimos)
+4. **NetworkPolicy**: Aislamiento de red básico entre namespaces
+
+### 11.3 Verificación de Namespaces
+
+#### Namespace `dev` en Azure AKS
+
+**Comandos de verificación**:
+```bash
+# Conectar a Azure AKS
+az aks get-credentials --resource-group microservices-rg --name microservices-cluster-prod --overwrite-existing
+
+# Verificar namespace
+kubectl get namespace dev
+
+# Verificar políticas
+kubectl get resourcequota,limitrange,networkpolicy -n dev
+```
+
+**Evidencia**:
+![Namespace dev en Azure AKS](images/namespaces/azure1.png)
+![Políticas del namespace dev](images/namespaces/azure2.png)
+
+#### Namespace `prod` en GCP GKE
+
+**Comandos de verificación**:
+```bash
+# Conectar a GCP GKE
+gcloud container clusters get-credentials microservices-cluster-gke-prod \
+  --zone us-central1-a \
+  --project microservices-gke-prod
+
+# Verificar namespace
+kubectl get namespace prod
+
+# Verificar políticas
+kubectl get resourcequota,limitrange,networkpolicy -n prod
+```
+
+**Evidencia**:
+![Namespace prod en GCP GKE](images/namespaces/gcp1.png)
+![Políticas del namespace prod](images/namespaces/gcp2.png)
+
+### 11.4 Estado de Terraform
+
+**Comando de verificación**:
+```bash
+cd infra/terraform
+terraform state list | grep namespace
+```
+
+**Evidencia**:
+![Estado de Terraform - Namespaces](images/namespaces/terraform.png)
+
+### 11.5 Políticas Aplicadas
+
+#### ResourceQuota
+
+**Namespace `dev`** (Azure AKS):
+- CPU requests: 8 cores
+- Memory requests: 16Gi
+- CPU limits: 16 cores
+- Memory limits: 32Gi
+- Pods máximos: 100
+
+**Namespace `prod`** (GCP GKE):
+- CPU requests: 16 cores
+- Memory requests: 32Gi
+- CPU limits: 32 cores
+- Memory limits: 64Gi
+- Pods máximos: 200
+
+#### LimitRange
+
+**Namespace `dev`**:
+- Default CPU limit: 1 core
+- Default memory limit: 1Gi
+- Default CPU request: 100m
+- Default memory request: 128Mi
+- Max CPU: 4 cores
+- Max memory: 4Gi
+
+**Namespace `prod`**:
+- Default CPU limit: 2 cores
+- Default memory limit: 2Gi
+- Default CPU request: 200m
+- Default memory request: 256Mi
+- Max CPU: 8 cores
+- Max memory: 8Gi
+
+#### NetworkPolicy
+
+Ambos namespaces tienen NetworkPolicy habilitado que:
+- Permite comunicación dentro del mismo namespace
+- Permite tráfico saliente a DNS (kube-system)
+- Bloquea tráfico no autorizado desde/hacia otros namespaces
+
+### 11.6 Cumplimiento del DoD (Definition of Done)
+
+#### ✅ DoD 1: Namespaces creados con Terraform
+- ✅ Módulo Terraform creado en `infra/terraform/modules/namespace/`
+- ✅ Namespace `dev` creado en Azure AKS
+- ✅ Namespace `prod` creado en GCP GKE
+- ✅ Ambos namespaces gestionados por Terraform
+
+#### ✅ DoD 2: ResourceQuota aplicado
+- ✅ ResourceQuota configurado en ambos namespaces
+- ✅ Límites de CPU, memoria y pods definidos
+- ✅ Verificado con `kubectl get resourcequota -n <namespace>`
+
+#### ✅ DoD 3: LimitRange aplicado
+- ✅ LimitRange configurado en ambos namespaces
+- ✅ Defaults, máximos y mínimos definidos
+- ✅ Verificado con `kubectl get limitrange -n <namespace>`
+
+#### ✅ DoD 4: NetworkPolicy aplicado
+- ✅ NetworkPolicy configurado en ambos namespaces
+- ✅ Aislamiento de red básico implementado
+- ✅ Verificado con `kubectl get networkpolicy -n <namespace>`
+
+#### ✅ DoD 5: Evidencia documentada
+- ✅ Capturas de pantalla de namespaces y políticas
+- ✅ Estado de Terraform verificado
+- ✅ Documentación completa en este README
+
+### 11.7 Comandos Útiles
+
+```bash
+# Verificar namespaces
+kubectl get namespace dev prod
+
+# Ver políticas en namespace dev (Azure AKS)
+az aks get-credentials --resource-group microservices-rg --name microservices-cluster-prod --overwrite-existing
+kubectl get resourcequota,limitrange,networkpolicy -n dev
+
+# Ver políticas en namespace prod (GCP GKE)
+gcloud container clusters get-credentials microservices-cluster-gke-prod \
+  --zone us-central1-a \
+  --project microservices-gke-prod
+kubectl get resourcequota,limitrange,networkpolicy -n prod
+
+# Ver estado de Terraform
+cd infra/terraform
+terraform state list | grep namespace
+
+# Aplicar cambios de namespaces
+terraform apply -target=module.namespace_dev -target=module.namespace_prod
+```
+
+### 11.8 Beneficios de la Implementación
+
+1. **Aislamiento de Recursos**: ResourceQuota previene que un namespace consuma todos los recursos del cluster
+2. **Control de Límites**: LimitRange asegura que los pods tengan límites razonables por defecto
+3. **Seguridad de Red**: NetworkPolicy proporciona aislamiento de red entre namespaces
+4. **Gestión como Código**: Todo gestionado con Terraform, versionado y reproducible
+5. **Multi-Cloud**: Misma estrategia aplicada en Azure AKS y GCP GKE
+
+### 11.9 Documentación Adicional
+
+- **Estrategia de Namespaces**: [`docs/infra/NAMESPACES_ESTRATEGIA.md`](infra/NAMESPACES_ESTRATEGIA.md)
+- **Módulo Terraform**: [`infra/terraform/modules/namespace/`](../infra/terraform/modules/namespace/)
+- **Script de Aplicación**: [`infra/terraform/scripts/apply-namespaces.sh`](../infra/terraform/scripts/apply-namespaces.sh)
+- **Script de Verificación**: [`infra/terraform/scripts/verify-hu6.sh`](../infra/terraform/scripts/verify-hu6.sh)
+
+---
+
