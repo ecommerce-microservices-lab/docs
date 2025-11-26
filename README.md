@@ -1520,3 +1520,139 @@ kubectl get deployment <service> -n <namespace> -o yaml | grep -A 5 imagePullSec
 
 ---
 
+## 12. CI/CD Avanzado y Release Management (HU13 y HU19)
+
+### 12.1 Objetivo
+
+**HU13**: CI/CD Avanzado con Promoción y Aprobaciones (6 SP)  
+**HU19**: Release Management, Change Management y Semantic Release (5 SP)
+
+Implementar pipelines multi-ambiente con gates/aprobaciones manuales, notificaciones, rollback automático, y formalizar el proceso de releases con semantic-release, etiquetas automáticas y release notes.
+
+### 12.2 Evidencia de Implementación
+
+Toda la evidencia de cumplimiento de los criterios de aceptación (DoD) para HU13 y HU19 está documentada en:
+
+**📁 Ubicación**: [`docs/images/evidencia-cicd-release-management/`](images/evidencia-cicd-release-management/)
+
+**📄 Documentación**: [`docs/images/evidencia-cicd-release-management/README.md`](images/evidencia-cicd-release-management/README.md)
+
+### 12.3 HU13: CI/CD Avanzado con Promoción y Aprobaciones
+
+#### DoD 1: GitHub Actions/GitHub Environments con approvals obligatorios para `prod`
+
+**Evidencia**:
+- ✅ `github_environments.png` - Configuración de los GitHub Environments (`dev`, `stage`, `prod`)
+- ✅ `environment_prod_approvals.png` - Configuración de aprobaciones obligatorias para el environment `prod`
+- ✅ `approval.png` - Captura mostrando la solicitud de aprobación manual antes del despliegue a producción
+
+**Implementación**:
+- GitHub Environments creados en todos los repositorios usando el script `ci-templates/scripts/create-environments.sh`
+- Environment `prod` configurado con reviewers obligatorios
+- Workflow `deploy-to-k8s.yml` configurado para usar GitHub Environments dinámicamente según el tag de imagen
+
+#### DoD 2: Pipeline ejecuta: build, pruebas (unit/integration), Trivy, Sonar, push, deploy dev, approval stage/prod
+
+**Evidencia**:
+- ✅ `pr_to_develop.png` - Pipeline ejecutándose para PR hacia `develop` (despliegue a `dev`)
+- ✅ `pr_to_stage.png` - Pipeline ejecutándose para PR hacia `stage` (despliegue a `stage` con aprobación)
+- ✅ `pr_to_main.png` - Pipeline ejecutándose para PR hacia `main` (despliegue a `prod` con aprobación obligatoria)
+- ✅ `workflow_complete.png` - Pipeline completo mostrando todos los pasos: build, pruebas, seguridad, push, deploy
+
+**Implementación**:
+- Workflows reutilizables en `ci-templates/.github/workflows/`:
+  - `build.yml` - Build, pruebas, Trivy, Sonar, push a ACR
+  - `deploy-to-k8s.yml` - Deploy a Kubernetes con rollback automático
+- Pipelines configurados para cada rama: `develop` → `dev`, `stage` → `stage`, `main` → `prod`
+
+#### DoD 3: Notificaciones configuradas (webhook) en fallos y despliegues
+
+**Implementación**:
+- ✅ Notificaciones por email de GitHub Actions configuradas automáticamente
+- ✅ Notificaciones visibles en los workflows completados (evidencia en capturas de workflows)
+
+#### DoD 4: Paso de rollback documentado/automatizado
+
+**Implementación**:
+- ✅ Rollback automático implementado en `ci-templates/.github/workflows/deploy-to-k8s.yml`
+- ✅ Usa `kubectl rollout undo` si el despliegue falla
+- ✅ Documentado en el código del workflow con comentarios explicativos
+
+### 12.4 HU19: Release Management, Change Management y Semantic Release
+
+#### DoD 1: `semantic-release` funcionando en main con versión/tag + release notes
+
+**Evidencia**:
+- ✅ `releases.png` - Lista de releases generados automáticamente por semantic-release
+- ✅ `github_release.png` - Detalle de un release mostrando la versión, tag y release notes automáticas
+
+**Implementación**:
+- semantic-release configurado en cada repositorio de microservicio
+- Workflow `release.yml` ejecuta semantic-release en push a `main`
+- Genera versiones automáticas basadas en Conventional Commits
+- Crea tags y release notes automáticamente
+
+#### DoD 2: Issues/PRs etiquetados automáticamente (`released`)
+
+**Evidencia**:
+- ✅ `prs.png` - Pull Requests mostrando los tags automáticos aplicados por semantic-release
+
+**Implementación**:
+- semantic-release etiqueta automáticamente los PRs e Issues relacionados con cada release
+- Tags `released` aplicados automáticamente cuando se genera un release
+
+#### DoD 3: Proceso de change management documentado (RFC luz/plantilla + approvals por entorno)
+
+**Implementación**:
+- ✅ Proceso de change management documentado en la documentación del proyecto
+- ✅ Approvals por entorno implementados mediante GitHub Environments (ver HU13)
+
+#### DoD 4: Plan de rollback por servicio (script/manual) probado
+
+**Implementación**:
+- ✅ Plan de rollback implementado y documentado en el workflow de despliegue
+- ✅ Rollback automático usando `kubectl rollout undo` (ver HU13 DoD 4)
+- ✅ Procedimiento manual documentado para rollback por servicio
+
+### 12.5 Archivos de Evidencia
+
+Todas las capturas de pantalla están organizadas en `docs/images/evidencia-cicd-release-management/`:
+
+| Archivo | HU | Descripción |
+|---------|----|-------------| 
+| `github_environments.png` | HU13 | Configuración de GitHub Environments |
+| `environment_prod_approvals.png` | HU13 | Aprobaciones obligatorias para producción |
+| `approval.png` | HU13 | Solicitud de aprobación manual |
+| `pr_to_develop.png` | HU13 | Pipeline para despliegue a `dev` |
+| `pr_to_stage.png` | HU13 | Pipeline para despliegue a `stage` |
+| `pr_to_main.png` | HU13 | Pipeline para despliegue a `prod` |
+| `workflow_complete.png` | HU13 | Pipeline completo con todos los pasos |
+| `releases.png` | HU19 | Releases generados por semantic-release |
+| `github_release.png` | HU19 | Detalle de release con notas automáticas |
+| `prs.png` | HU19 | PRs etiquetados automáticamente |
+
+### 12.6 Verificación de Cumplimiento
+
+#### HU13 - Checklist
+- [x] GitHub Environments configurados (`dev`, `stage`, `prod`)
+- [x] Aprobaciones obligatorias para `prod`
+- [x] Pipeline multi-ambiente funcionando (dev→stage→prod)
+- [x] Notificaciones configuradas (email de GitHub Actions)
+- [x] Rollback automático implementado
+
+#### HU19 - Checklist
+- [x] semantic-release funcionando en `main`
+- [x] Versiones y tags generados automáticamente
+- [x] Release notes automáticas
+- [x] PRs etiquetados automáticamente
+- [x] Proceso de change management documentado
+- [x] Plan de rollback implementado
+
+### 12.7 Referencias
+
+- **Workflows**: `ci-templates/.github/workflows/`
+- **Script de creación de environments**: `ci-templates/scripts/create-environments.sh`
+- **Documentación detallada**: [`docs/images/evidencia-cicd-release-management/README.md`](images/evidencia-cicd-release-management/README.md)
+
+---
+
