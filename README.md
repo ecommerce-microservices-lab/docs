@@ -1614,22 +1614,43 @@ Toda la evidencia de cumplimiento de los criterios de aceptación (DoD) para HU1
 - ✅ Rollback automático usando `kubectl rollout undo` (ver HU13 DoD 4)
 - ✅ Procedimiento manual documentado para rollback por servicio
 
-### 12.5 Archivos de Evidencia
+### 12.5 Evidencia Visual
 
-Todas las capturas de pantalla están organizadas en `docs/images/evidencia-cicd-release-management/`:
+**HU13 - GitHub Environments y Aprobaciones**:
 
-| Archivo | HU | Descripción |
-|---------|----|-------------| 
-| `github_environments.png` | HU13 | Configuración de GitHub Environments |
-| `environment_prod_approvals.png` | HU13 | Aprobaciones obligatorias para producción |
-| `approval.png` | HU13 | Solicitud de aprobación manual |
-| `pr_to_develop.png` | HU13 | Pipeline para despliegue a `dev` |
-| `pr_to_stage.png` | HU13 | Pipeline para despliegue a `stage` |
-| `pr_to_main.png` | HU13 | Pipeline para despliegue a `prod` |
-| `workflow_complete.png` | HU13 | Pipeline completo con todos los pasos |
-| `releases.png` | HU19 | Releases generados por semantic-release |
-| `github_release.png` | HU19 | Detalle de release con notas automáticas |
-| `prs.png` | HU19 | PRs etiquetados automáticamente |
+![GitHub Environments](images/evidencia-cicd-release-management/github_environments.png)
+*Configuración de GitHub Environments (dev, stage, prod)*
+
+![Environment Prod Approvals](images/evidencia-cicd-release-management/environment_prod_approvals.png)
+*Aprobaciones obligatorias para el environment `prod`*
+
+![Approval](images/evidencia-cicd-release-management/approval.png)
+*Solicitud de aprobación manual antes del despliegue a producción*
+
+**HU13 - Pipelines Multi-Ambiente**:
+
+![PR to Develop](images/evidencia-cicd-release-management/pr_to_develop.png)
+*Pipeline ejecutándose para PR hacia `develop` (despliegue a `dev`)*
+
+![PR to Stage](images/evidencia-cicd-release-management/pr_to_stage.png)
+*Pipeline ejecutándose para PR hacia `stage` (despliegue a `stage` con aprobación)*
+
+![PR to Main](images/evidencia-cicd-release-management/pr_to_main.png)
+*Pipeline ejecutándose para PR hacia `main` (despliegue a `prod` con aprobación obligatoria)*
+
+![Workflow Complete](images/evidencia-cicd-release-management/workflow_complete.png)
+*Pipeline completo mostrando todos los pasos: build, pruebas, seguridad, push, deploy*
+
+**HU19 - Semantic Release**:
+
+![Releases](images/evidencia-cicd-release-management/releases.png)
+*Lista de releases generados automáticamente por semantic-release*
+
+![GitHub Release](images/evidencia-cicd-release-management/github_release.png)
+*Detalle de un release mostrando la versión, tag y release notes automáticas*
+
+![PRs](images/evidencia-cicd-release-management/prs.png)
+*Pull Requests mostrando los tags automáticos aplicados por semantic-release*
 
 ### 12.6 Verificación de Cumplimiento
 
@@ -1759,14 +1780,18 @@ Se implementó un paso adicional que analiza los reportes de ZAP y reporta vulne
 - ✅ Actualmente configurado para **reportar sin fallar** (para permitir revisión inicial)
 - ✅ Mecanismo de excepciones documentadas implementado en `zap-exceptions.md`
 
-### 13.6 Evidencia
+### 13.6 Evidencia Visual
 
-**Capturas de pantalla**:
-- `docs/images/zap-report/zap_pipeline.png` - Pipeline ejecutando ZAP
-- `docs/images/zap-report/zap_scanning_report.png` - Reporte de escaneo de ZAP
+**OWASP ZAP - Pipeline y Reportes**:
+
+![ZAP Pipeline](images/zap-report/zap_pipeline.png)
+*Pipeline ejecutando ZAP Baseline Scan*
+
+![ZAP Scanning Report](images/zap-report/zap_scanning_report.png)
+*Reporte de escaneo de ZAP mostrando vulnerabilidades detectadas*
 
 **Reportes**:
-- `docs/images/zap-report/report_html.html` - Reporte HTML completo de ZAP
+- Reporte HTML completo: [`docs/images/zap-report/report_html.html`](images/zap-report/report_html.html)
 
 ### 13.7 Referencias
 
@@ -1862,21 +1887,45 @@ Se implementó un paso adicional que analiza los reportes de ZAP y reporta vulne
 #### ⚠️ DoD 5: Documentación "Runbook observabilidad" con SLOs definidos
 - ⚠️ **Pendiente**: Crear runbook de observabilidad con SLOs definidos para todos los servicios
 
-### 14.4 Evidencia
+### 14.4 Evidencia Visual
 
-**Ubicación**: `docs/observabilidad/`
+**Kibana - Logs Centralizados**:
 
-**Capturas de pantalla**:
-- `kibana1.png` - Pantalla de Discover con logs
-- `kibana2.png` - Búsqueda y filtros en Kibana
-- `grafana1.png` - Dashboard de Grafana (API Gateway y Order Service)
-- `grafana2.png` - Dashboard de Grafana (Payment, User, Product, Shipping, Favourite Services)
-- `prometheus1.png` - Query de Request Rate en Prometheus
-- `prometheus2.png` - Query de Average Latency en Prometheus
-- `prometheus3.png` - Lista de reglas de alerta en Prometheus
-- `prometheus4.png` - Métricas disponibles en Prometheus
-- `zipkin1.png` - Lista de trazas en Zipkin
-- `zipkin2.png` - Detalle de traza end-to-end en Zipkin
+![Kibana Discover](observabilidad/kibana1.png)
+*Pantalla de Discover con logs de todos los servicios*
+
+![Kibana Search](observabilidad/kibana2.png)
+*Búsqueda y filtros en Kibana*
+
+**Grafana - Dashboards de Observabilidad**:
+
+![Grafana Dashboard 1](observabilidad/grafana1.png)
+*Dashboard de Grafana mostrando métricas de API Gateway y Order Service (Request Rate, Error Rate, Average Latency)*
+
+![Grafana Dashboard 2](observabilidad/grafana2.png)
+*Dashboard de Grafana mostrando métricas de Payment, User, Product, Shipping y Favourite Services*
+
+**Prometheus - Métricas y Alertas**:
+
+![Prometheus Request Rate](observabilidad/prometheus1.png)
+*Query de Request Rate en Prometheus para API Gateway*
+
+![Prometheus Average Latency](observabilidad/prometheus2.png)
+*Query de Average Latency en Prometheus para Payment Service*
+
+![Prometheus Rules](observabilidad/prometheus3.png)
+*Lista de reglas de alerta configuradas en Prometheus (11 reglas para servicios críticos)*
+
+![Prometheus Metrics](observabilidad/prometheus4.png)
+*Métricas disponibles en Prometheus (http_server_requests_seconds_*)*
+
+**Zipkin - Tracing Distribuido**:
+
+![Zipkin Traces](observabilidad/zipkin1.png)
+*Lista de trazas en Zipkin mostrando múltiples servicios*
+
+![Zipkin Trace Detail](observabilidad/zipkin2.png)
+*Detalle de traza end-to-end mostrando api-gateway → product-service con timeline completo*
 
 ### 14.5 Referencias
 
