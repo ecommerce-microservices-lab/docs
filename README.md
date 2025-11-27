@@ -1927,6 +1927,9 @@ Se implementó un paso adicional que analiza los reportes de ZAP y reporta vulne
 ![Zipkin Trace Detail](observabilidad/zipkin2.png)
 *Detalle de traza end-to-end mostrando api-gateway → product-service con timeline completo*
 
+![Zipkin Dependencies](observabilidad/zipkin3.png)
+*Vista de dependencias en Zipkin mostrando el grafo de llamadas desde `api-gateway` hacia los servicios downstream*
+
 ### 14.5 Referencias
 
 - **Manifests de observabilidad**: `infra/k8s/devops/`
