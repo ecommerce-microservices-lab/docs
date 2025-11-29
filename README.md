@@ -1858,7 +1858,10 @@ Se implementó un paso adicional que analiza los reportes de ZAP y reporta vulne
   - Request Rate para todos los servicios
   - Error Rate para servicios críticos
   - Average Latency (usando métricas disponibles de Spring Boot Actuator)
-- ⚠️ **Pendiente**: Métricas de negocio (orders.created, payments.processed) - requiere implementación en código Java
+- ✅ **Métricas de negocio implementadas y funcionando**:
+  - `orders_created_total` - Contador de órdenes creadas (Order Service)
+  - `order_value_usd` - Histograma del valor de las órdenes (Order Service)
+  - `completed_payments_total` - Contador de pagos completados (Payment Service)
 
 #### ✅ DoD 2: Alertas en Alertmanager configuradas y probadas
 - ✅ **Alertmanager desplegado** y funcionando
@@ -1930,6 +1933,25 @@ Se implementó un paso adicional que analiza los reportes de ZAP y reporta vulne
 ![Zipkin Dependencies](observabilidad/zipkin3.png)
 *Vista de dependencias en Zipkin mostrando el grafo de llamadas desde `api-gateway` hacia los servicios downstream*
 
+**Métricas de Negocio - Orders Created**:
+
+![Orders Created Total - Valor 0](observabilidad/orders_created_total_0.png)
+*Métrica `orders_created_total` en Prometheus antes de crear órdenes (valor 0)*
+
+![Orders Created Total - Valor 1](observabilidad/orders_created_total_1.png)
+*Métrica `orders_created_total` en Prometheus después de crear una orden (valor 1)*
+
+![Grafana Orders Created](observabilidad/grafana_orders_created.png)
+*Panel en Grafana mostrando la evolución de `orders_created_total` y `order_value_usd_bucket`*
+
+**Métricas de Negocio - Payments Completed**:
+
+![Completed Payments Total](observabilidad/completed_payments_total.png)
+*Métrica `completed_payments_total` en Prometheus mostrando el incremento cuando se completa un pago (valor 1)*
+
+![Grafana Payments Total](observabilidad/grafana_payments_total.png)
+*Panel en Grafana mostrando la evolución de `completed_payments_total` (pagos completados)*
+
 ### 14.5 Referencias
 
 - **Manifests de observabilidad**: `infra/k8s/devops/`
@@ -1945,13 +1967,17 @@ Se implementó un paso adicional que analiza los reportes de ZAP y reporta vulne
 
 ### 14.6 Estado de Cumplimiento
 
-**✅ COMPLETADO (con pendientes menores)**:
+**✅ COMPLETADO**:
 - ✅ Dashboards Grafana funcionando (Average Latency en lugar de P95, válido)
 - ✅ Alertas configuradas en Alertmanager
 - ✅ ELK Stack funcionando con ingesta de logs
 - ✅ Tracing distribuido en Zipkin funcionando
+- ✅ Métricas de negocio implementadas y funcionando:
+  - `orders_created_total` - Órdenes creadas
+  - `order_value_usd` - Valor de las órdenes (histograma)
+  - `completed_payments_total` - Pagos completados
 
-**Nota**: Los pendientes son menores y no bloquean la evidencia principal. El stack de observabilidad está completamente funcional.
+**Nota**: El stack de observabilidad está completamente funcional, incluyendo métricas técnicas y de negocio.
 
 ---
 
