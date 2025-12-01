@@ -459,7 +459,44 @@ Todos los microservicios se comunican entre sí a través del API Gateway y est�
 3. **Release Notes automáticos**: Generación automática basada en Conventional Commits
 4. **Permisos explícitos**: Configuración de permisos para que semantic-release pueda crear releases y tags
 
----
+### 5.5 Patrones de Diseño Utilizados
+
+Los patrones de diseño implementados en la arquitectura del proyecto son los siguientes (los patrones que indican un **Beneficio**, **Propósito** y **Detalles**) son patrones extras que fueron agregados al proyecto:
+
+#### Patrones de Arquitectura
+
+- **Microservicios**: Sistema compuesto por 10 microservicios independientes con escalabilidad y despliegue independiente
+- **API Gateway**: Gateway Aggregation Pattern usando Spring Cloud Gateway para enrutamiento, load balancing y CORS
+- **Service Discovery**: Client-Side Service Discovery con Netflix Eureka para descubrimiento dinámico de servicios
+- **Configuración Centralizada**: External Configuration Pattern con Spring Cloud Config Server para gestión centralizada
+
+#### Patrones de Integración
+
+- **Service-to-Service Communication**: Comunicación HTTP síncrona usando Feign Client (declarativo) y RestTemplate (programático)
+- **Circuit Breaker**: Protección contra cascading failures con Resilience4j (failure rate: 50%, sliding window: 10 llamadas)
+- **Retry**: Reintentos automáticos para operaciones transitorias fallidas
+  - **Propósito**: Recuperarse automáticamente de fallos temporales en llamadas HTTP entre servicios
+  - **Beneficios**: Mejora la resiliencia del sistema, reduce fallos por problemas de red temporales, mejora la experiencia del usuario al manejar errores transitorios automáticamente
+  - **Configuración**: Max 3 intentos, wait 500ms, retry en `ResourceAccessException` y `RestClientException`
+- **Bulkhead**: Aislamiento de recursos para prevenir que un fallo en un servicio afecte a otros
+  - **Propósito**: Limitar el número de llamadas concurrentes a un servicio para aislar recursos y prevenir cascading failures
+  - **Beneficios**: Protege servicios críticos de sobrecarga, permite degradación controlada, mejora la estabilidad general del sistema
+  - **Configuración**: Max 10 llamadas concurrentes, sin espera (0ms)
+- **Fallback**: Métodos alternativos cuando falla una operación principal
+
+#### Patrones de Diseño (Design Patterns)
+
+- **Repository Pattern**: Separación de lógica de acceso a datos con interfaces `*Repository` extendiendo `JpaRepository`
+- **Service Layer Pattern**: Encapsulación de lógica de negocio con interfaces `*Service` e implementaciones `*ServiceImpl`
+- **DTO Pattern**: Separación entre entidades de dominio y objetos de transferencia usando clases `*Dto`
+- **Mapper Pattern**: Conversión entre entidades y DTOs mediante clases helper estáticas
+- **Builder Pattern**: Construcción de objetos complejos usando Lombok `@Builder`
+- **Dependency Injection**: Inyección de dependencias con Spring Framework (constructor injection preferido)
+- **Feature Toggle (Feature Flags)**: Comportamiento condicional basado en feature flags
+  - **Propósito**: Permitir activar/desactivar funcionalidades sin cambios de código, facilitar despliegues graduales y A/B testing
+  - **Beneficios**: Reducción de riesgo en despliegues, capacidad de rollback rápido, habilitación de funcionalidades por segmentos de usuarios, facilita testing en producción
+  - **Implementación**: Togglz con features como `DISCOUNT_APPLIED` en product-service
+- **Exception Handler Pattern**: Manejo centralizado de excepciones con `@ControllerAdvice` y `@ExceptionHandler`
 
 ## 6. Anexos
 
