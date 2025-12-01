@@ -6,6 +6,11 @@
 
 ---
 
+## Arquitectura General del Sistema
+
+![Diagrama de Arquitectura Completa](images/diagram.png)
+*Diagrama arquitectónico mostrando la infraestructura multi-cloud, microservicios y stack de observabilidad completo.*
+
 ## Estrategia de Branching
 
 Para este proyecto, hemos implementado la estrategia de branching GitFlow, porque ofrece un marco robusto para gestionar tanto los flujos de trabajo de desarrollo como los de operaciones.
