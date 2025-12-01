@@ -804,7 +804,7 @@ Se creó un script automatizado para aplicar RBAC en cualquier namespace:
 - ✅ Manifiestos listos para cuando se desplieguen
 
 #### Namespace `prod` (GCP GKE)
-- ⏳ RBAC pendiente de aplicar cuando el cluster esté activo
+- ✅ RBAC aplicado para los 10 microservicios
 - ✅ Manifiestos RBAC listos en `infra/k8s/rbac/`
 - ✅ Deployments en `infra/k8s/prod/` ya tienen `serviceAccountName` configurado
 
