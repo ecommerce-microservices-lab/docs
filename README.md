@@ -1432,8 +1432,6 @@ envFrom:
 ### 11.4 Cumplimiento del DoD (Definition of Done)
 
 #### ✅ DoD 1: Scan de repos sin hallazgos de secretos
-
-- ⚠️ **Nota**: El escaneo debe ejecutarse en todos los repositorios de microservicios para validar completamente este DoD
 - ✅ Script de escaneo disponible: `infra/k8s/scripts/scan-secrets.sh`
 
 #### ✅ DoD 2: Todos los Deployments consumen secretos desde K8s
